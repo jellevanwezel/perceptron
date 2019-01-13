@@ -1,6 +1,8 @@
 #include <iostream>
 #include <algorithm>
 
+using namespace std;
+
 float response(const float *x, const float *w, const int size) {
     float sum = 0;
     for (int i = 0; i < size; i++) {
@@ -37,7 +39,7 @@ int classify(const float *x, const float *w, const int size) {
     return sign(response(x, w, size));
 }
 
-void onEpochEnd(int *indexes, int size){
+void onEpochEnd(int *indexes, int size) {
     std::random_shuffle(indexes, indexes + size);
 }
 
@@ -52,7 +54,7 @@ float test(float **x, const int *y, const float *w, const int dataSize, const in
 
 float *train(int epochs, float eta, float **x, const int *y, float *w, const int dataSize, const int inputSize) {
     int *dataIndexes = new int[dataSize];
-    for(int i= 0; i < dataSize; i++){
+    for (int i = 0; i < dataSize; i++) {
         dataIndexes[i] = i;
     }
     onEpochEnd(dataIndexes, dataSize);
@@ -72,11 +74,10 @@ float *train(int epochs, float eta, float **x, const int *y, float *w, const int
     }
 
     delete[] dataIndexes;
-
     return w;
 }
 
-int main() {
+int main(int argc, char** argv) {
     int inputSize = 3; //{bias, x1, x2}
     int dataSize = 6;
 
@@ -89,8 +90,8 @@ int main() {
     x[4] = new float[inputSize]{1, 10, 15};
     x[5] = new float[inputSize]{1, 5, 10};
 
-    int y[6] = {-1, -1, -1, 1, 1, 1};
-    float weights[3] = {0, 0, 0};
+    int *y = new int[dataSize]{-1, -1, -1, 1, 1, 1};
+    auto *weights = new float[inputSize]{0, 0, 0};
     int epochs = 50;
     float eta = 0.01;
 
@@ -99,6 +100,7 @@ int main() {
 
     for (int i = 0; i < dataSize; i++) { delete[] x[i]; }
     delete[] x;
-
+    delete[] y;
+    delete[] weights;
     return 0;
 }
