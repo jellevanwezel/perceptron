@@ -80,5 +80,11 @@ int main() {
 
     train(epochs, eta, x, y, weights, dataSize, inputSize);
     printWeights(weights, inputSize);
+
+    for(int i=0; i < dataSize; i++){
+        delete[] x[i];
+    }
+    delete[] x;
+
     return 0;
 }
