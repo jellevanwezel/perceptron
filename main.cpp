@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 
 float response(const float *x, const float *w, const int size) {
     float sum = 0;
@@ -36,6 +37,10 @@ int classify(const float *x, const float *w, const int size) {
     return sign(response(x, w, size));
 }
 
+void onEpochEnd(int *indexes, int size){
+    std::random_shuffle(indexes, indexes + size);
+}
+
 float test(float **x, const int *y, const float *w, const int dataSize, const int inputSize) {
     float classRate = 0;
     for (int i = 0; i < dataSize; i++) {
@@ -46,17 +51,28 @@ float test(float **x, const int *y, const float *w, const int dataSize, const in
 }
 
 float *train(int epochs, float eta, float **x, const int *y, float *w, const int dataSize, const int inputSize) {
+    int *dataIndexes = new int[dataSize];
+    for(int i= 0; i < dataSize; i++){
+        dataIndexes[i] = i;
+    }
+    onEpochEnd(dataIndexes, dataSize);
+
     for (int i = 0; i < epochs; i++) {
         for (int j = 0; j < dataSize; j++) {
-            int yHat = classify(x[j], w, inputSize);
-            updateWeights(yHat, y[j], eta, x[j], w, inputSize);
+            int index = dataIndexes[j];
+            int yHat = classify(x[index], w, inputSize);
+            updateWeights(yHat, y[index], eta, x[index], w, inputSize);
         }
         float errorRate = test(x, y, w, dataSize, inputSize);
         std::cout << "Epoch: " << i << " - Error rate: " << errorRate << std::endl;
         if (errorRate == 0) {
             break;
         }
+        onEpochEnd(dataIndexes, dataSize);
     }
+
+    delete[] dataIndexes;
+
     return w;
 }
 
