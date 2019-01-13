@@ -1,5 +1,8 @@
 #include <iostream>
 #include <algorithm>
+#include <fstream>
+#include <vector>
+#include <sstream>
 
 using namespace std;
 
@@ -77,25 +80,67 @@ float *train(int epochs, float eta, float **x, const int *y, float *w, const int
     return w;
 }
 
-int main(int argc, char** argv) {
-    int inputSize = 3; //{bias, x1, x2}
-    int dataSize = 6;
 
-    float **x;
-    x = new float *[dataSize];
-    x[0] = new float[inputSize]{1, 0, 0};
-    x[1] = new float[inputSize]{1, 1, 2};
-    x[2] = new float[inputSize]{1, 2, 1};
-    x[3] = new float[inputSize]{1, 7, 8};
-    x[4] = new float[inputSize]{1, 10, 15};
-    x[5] = new float[inputSize]{1, 5, 10};
+std::vector<std::vector<float>> parseCSV(const std::string &filePath) {
+    std::ifstream data(filePath);
+    std::string line;
+    std::vector<std::vector<float>> parsedCsv;
+    while (std::getline(data, line)) {
+        line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
+        line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+        std::stringstream lineStream(line);
+        std::string cell;
+        std::vector<float> parsedRow;
+        while (std::getline(lineStream, cell, ',')) {
+            float f = std::stof(cell);
+            parsedRow.push_back(f);
+        }
+        parsedCsv.push_back(parsedRow);
+    }
+    return parsedCsv;
+};
 
-    int *y = new int[dataSize]{-1, -1, -1, 1, 1, 1};
+float **getData(vector<vector<float>> &vals, int N, int M) {
+    float **temp;
+    temp = new float *[N];
+    for (unsigned i = 0; (i < N); i++) {
+        temp[i] = new float[M];
+        temp[i][0] = 1; // add the bias
+        for (unsigned j = 0; (j < M - 1); j++) { // the last value is the label
+            temp[i][j + 1] = vals[i][j];
+        }
+    }
+    return temp;
+}
+
+int *getLabels(vector<vector<float>> &vals, int N, int M) {
+    int *temp;
+    temp = new int[N];
+    for (unsigned i = 0; (i < N); i++) {
+        temp[i] = static_cast<int>(vals[i][M-1]); //only take last value
+    }
+    return temp;
+}
+
+int main(int argc, char **argv) {
+
+    ifstream infile(argv[1]);
+    std::string line;
+    vector<double> constants;
+    std::cout << argv[1] << std::endl;
+    vector<vector<float>> data = parseCSV(argv[1]);
+    vector<vector<float>> labels = parseCSV(argv[1]);
+
+    int inputSize = static_cast<int>(data[0].size());
+    int dataSize = static_cast<int>(data.size());
+    float **x = getData(data, dataSize, inputSize);
+    int *y = getLabels(data, dataSize, inputSize);
+
     auto *weights = new float[inputSize]{0, 0, 0};
     int epochs = 50;
     float eta = 0.01;
 
-    train(epochs, eta, x, y, weights, dataSize, inputSize);
+    train(epochs, eta, x, y, weights, dataSize, inputSize); // +1 for the bias
     printWeights(weights, inputSize);
 
     for (int i = 0; i < dataSize; i++) { delete[] x[i]; }
